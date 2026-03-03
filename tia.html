@@ -3,45 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tia's Birthday Sky</title>
+    <title>Tia's Birthday: PARTY MODE</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;900&family=Pacifico&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        :root {
+            --bg-color-1: #ff7eb3;
+            --bg-color-2: #ff758c;
+            --accent-gold: #FFD700;
+        }
+
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
-            background: linear-gradient(180deg, #87CEEB 0%, #4682B4 100%);
-            font-family: 'Montserrat', sans-serif; user-select: none; touch-action: none; 
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            font-family: 'Montserrat', sans-serif; user-select: none; touch-action: none;
         }
-        #game-container { position: relative; width: 100vw; height: 100vh; }
-        .tia-cloud-layer { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
-        .cloud-head {
-            position: absolute; will-change: transform; opacity: 0.2;
-            filter: blur(4px); -webkit-user-drag: none;
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
-        .header-ui { position: absolute; top: 5vh; width: 100%; text-align: center; pointer-events: none; z-index: 100; }
+
+        body.party-active { animation: rainbowBG 2s infinite linear; }
+        @keyframes rainbowBG { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+
+        #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+
+        /* Floating Balloons */
+        .balloon {
+            position: absolute; bottom: -100px; width: 40px; height: 50px;
+            background: rgba(255,255,255,0.3); border-radius: 50%;
+            z-index: 1; animation: floatUp 10s linear infinite;
+        }
+        @keyframes floatUp {
+            to { transform: translateY(-120vh) translateX(50px); opacity: 0; }
+        }
+
+        .mountains {
+            position: absolute; bottom: 0; width: 100%; height: 25vh;
+            background: rgba(255, 255, 255, 0.2);
+            clip-path: polygon(0% 100%, 0% 70%, 15% 40%, 30% 65%, 45% 30%, 60% 70%, 75% 45%, 90% 80%, 100% 50%, 100% 100%);
+            z-index: 2;
+            backdrop-filter: blur(5px);
+        }
+
+        .header-ui { 
+            position: absolute; top: 5vh; width: 100%; padding: 0 20px;
+            text-align: center; pointer-events: none; z-index: 100; 
+        }
+
         .title {
-            font-size: clamp(1.8rem, 10vw, 5rem); color: white;
-            display: inline-flex; flex-wrap: wrap; justify-content: center;
-            gap: 2px; pointer-events: auto; text-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            font-size: clamp(2.2rem, 10vw, 5.5rem); color: white;
+            display: flex; flex-wrap: wrap; justify-content: center;
+            column-gap: 0.3em; pointer-events: auto; 
+            text-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            font-family: 'Pacifico', cursive; /* More "Birthday Card" style */
         }
-        .title span { display: inline-block; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .title span:hover { transform: scale(1.3) translateY(-10px) rotate(5deg); color: #FFD700; }
-        .head-interact {
-            position: absolute; will-change: transform; cursor: grab;
-            filter: drop-shadow(0 8px 12px rgba(0,0,0,0.2)); z-index: 10;
-            -webkit-user-drag: none; touch-action: none;
+
+        .word { display: inline-block; white-space: nowrap; }
+        .title span { display: inline-block; transition: 0.3s; cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><text y="24" font-size="24">🎂</text></svg>'), auto; }
+        .title span:hover { transform: scale(1.3) translateY(-10px); color: var(--accent-gold); }
+
+        .controls { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; z-index: 200; pointer-events: auto; }
+        .btn {
+            padding: 14px 22px; font-size: 0.9rem; font-weight: 900;
+            background: white; border: 4px solid transparent; border-radius: 50px;
+            cursor: pointer; box-shadow: 0 8px 0 rgba(0,0,0,0.1); transition: 0.1s;
         }
+        .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
+        
+        #party-btn { background: #ffdf00; color: #856404; }
+        #letter-btn { background: #ff85a1; color: white; }
+        #clear-btn { background: #ffffff; color: #ff4d4d; border: 2px solid #ff4d4d; }
+
+        /* Letter Overlay Upgraded */
+        #letter-overlay {
+            position: absolute; inset: 0; background: rgba(255, 133, 161, 0.4);
+            display: none; justify-content: center; align-items: center; z-index: 300;
+            backdrop-filter: blur(8px); padding: 20px; opacity: 0; transition: opacity 0.3s;
+        }
+        #letter-overlay.show { display: flex; opacity: 1; pointer-events: auto; }
+        
+        .letter-content {
+            background: #fff;
+            width: 100%; max-width: 550px; max-height: 80vh;
+            border-radius: 30px; padding: 40px; overflow-y: auto;
+            box-shadow: 0 20px 0 rgba(0,0,0,0.05), 0 30px 60px rgba(0,0,0,0.2);
+            position: relative;
+            border: 10px solid #fce4ec; /* Pink Border */
+        }
+
+        .close-letter { position: sticky; top: -10px; float: right; font-size: 2.5rem; cursor: pointer; color: #ff85a1; line-height: 1; }
+
+        .letter-text { color: #444; line-height: 1.8; font-size: 1.1rem; }
+        .signature { margin-top: 30px; border-top: 2px dashed #ff85a1; padding-top: 20px; }
+
+        .cloud-head { position: absolute; z-index: 1; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1)); }
+        .head-interact { position: absolute; will-change: transform; cursor: grab; z-index: 10; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <div class="tia-cloud-layer" id="background-clouds"></div>
+    <div id="background-clouds"></div>
+    <div class="mountains"></div>
+    
     <div class="header-ui">
         <h1 class="title" id="interactive-title"></h1>
+    </div>
+
+    <div class="controls">
+        <button id="party-btn" class="btn">🎁 PARTY MODE</button>
+        <button id="letter-btn" class="btn">💖 THE LETTER</button>
+        <button id="clear-btn" class="btn">🧹 CLEAN UP</button>
+    </div>
+
+    <div id="letter-overlay">
+        <div class="letter-content">
+            <span class="close-letter" id="close-btn">&times;</span>
+            <div class="letter-text">
+<b>Dear Tia,</b>
+
+When I first moved here, I told you that being invited to game night made me feel at home. But since then, you’ve done so much more than just invite me to parties. You walked the Rims with me when I was struggling, you sat with me through the heavy stuff without a single drop of judgment, and you gave me the tools (and the "F-ing pride!") to stand up for myself when I was terrified.
+A lot of my progress has your fingerprints all over it. Thank you for being the person who moves Christmas parties just so I can be there, and for being the mentor I didn't know I needed.
+You are the rarest kind of person,someone who creates a "family" wherever you go. I’m just so grateful I’m part of it.
+I hope your birthday is filled with exactly the kind of peace and joy you give to everyone else. Can’t wait to celebrate with the whole crew on Friday!
+
+<div class="signature">
+<b>Happy Birthday Mizz Tia!</b>
+
+With so much love and gratitude,
+<b>Caleb</b>
+</div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -49,30 +151,76 @@
     const container = document.getElementById('game-container');
     const cloudLayer = document.getElementById('background-clouds');
     const titleEl = document.getElementById('interactive-title');
-    const heads = []; 
-    const clouds = []; 
+    const partyBtn = document.getElementById('party-btn');
+    const letterBtn = document.getElementById('letter-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    const overlay = document.getElementById('letter-overlay');
+    const closeBtn = document.getElementById('close-btn');
     
-    const gravity = 0.6;
-    const friction = 0.98; 
-    const bounce = 0.7;
+    let heads = []; 
+    const clouds = []; 
+    let isPartyMode = false;
 
-    // Title generation
-    const text = "Happy Birthday, Tia!";
-    text.split('').forEach(char => {
-        const span = document.createElement('span');
-        span.innerHTML = char === ' ' ? '&nbsp;' : char;
-        titleEl.appendChild(span);
+    // 1. Text Logic
+    const fullText = "Happy Birthday, Tia!";
+    fullText.split(' ').forEach(word => {
+        const wordSpan = document.createElement('span');
+        wordSpan.className = 'word';
+        word.split('').forEach(char => {
+            const charSpan = document.createElement('span');
+            charSpan.textContent = char;
+            wordSpan.appendChild(charSpan);
+        });
+        titleEl.appendChild(wordSpan);
     });
 
+    // 2. Buttons
+    letterBtn.onclick = (e) => { e.stopPropagation(); overlay.classList.add('show'); };
+    closeBtn.onclick = (e) => { e.stopPropagation(); overlay.classList.remove('show'); };
+    overlay.onclick = (e) => { if(e.target === overlay) overlay.classList.remove('show'); };
+
+    partyBtn.onclick = (e) => {
+        e.stopPropagation();
+        isPartyMode = !isPartyMode;
+        document.body.classList.toggle('party-active');
+        partyBtn.innerText = isPartyMode ? "🍰 EAT CAKE!" : "🎁 PARTY MODE";
+        if(isPartyMode) startPartyRain();
+    };
+
+    clearBtn.onclick = (e) => {
+        e.stopPropagation();
+        confetti({ particleCount: 60, spread: 70, origin: { y: 0.8 }, colors: ['#ff85a1', '#ffdf00'] });
+        heads.forEach(h => h.element.remove());
+        heads = [];
+    };
+
+    function startPartyRain() {
+        if(!isPartyMode) return;
+        confetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#FFD700', '#FF1493', '#FFFFFF'] });
+        confetti({ particleCount: 2, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#00BFFF', '#FF69B4', '#FFFFFF'] });
+        requestAnimationFrame(startPartyRain);
+    }
+
+    // 3. Balloons Background
+    function createBalloon() {
+        const b = document.createElement('div');
+        b.className = 'balloon';
+        b.style.left = Math.random() * 100 + 'vw';
+        b.style.background = `hsla(${Math.random() * 360}, 70%, 70%, 0.4)`;
+        b.style.animationDuration = (Math.random() * 5 + 5) + 's';
+        container.appendChild(b);
+        setTimeout(() => b.remove(), 10000);
+    }
+    setInterval(createBalloon, 2000);
+
+    // 4. Tia Cloud Background
     class TiaCloud {
         constructor(x, y, size) {
             this.element = document.createElement('img');
             this.element.src = 'head.png'; 
             this.element.className = 'cloud-head';
-            this.x = x;
-            this.y = y;
-            this.size = size;
-            this.speed = 0.1 + Math.random() * 0.3;
+            this.x = x; this.y = y; this.size = size;
+            this.speed = 0.3 + Math.random() * 0.4;
             this.element.style.width = this.size + 'px';
             cloudLayer.appendChild(this.element);
         }
@@ -83,19 +231,29 @@
         }
     }
 
-    // Interactive Head Logic
+    function initClouds() {
+        const size = window.innerWidth < 600 ? 100 : 150;
+        for (let i = 0; i < 5; i++) {
+            clouds.push(new TiaCloud(Math.random() * window.innerWidth, Math.random() * window.innerHeight * 0.4, size));
+        }
+    }
+
+    // 5. Interactive Tia Heads
     class TiaHead {
         constructor(x, y) {
             this.element = document.createElement('img');
             this.element.src = 'head.png'; 
             this.element.className = 'head-interact';
-            const baseSize = window.innerWidth < 600 ? 80 : 120;
-            this.size = Math.random() * 40 + baseSize; 
+            this.size = window.innerWidth < 600 ? 70 : 90;
             this.element.style.width = this.size + 'px';
-            this.x = x - this.size/2;
-            this.y = y - this.size/2;
-            this.vx = (Math.random() - 0.5) * 20;
-            this.vy = (Math.random() - 0.5) * 20;
+            
+            // Add a "Party Glow" to spawned heads
+            const colors = ['#FFD700', '#FF69B4', '#00BFFF', '#ADFF2F'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            this.element.style.filter = `drop-shadow(0 0 10px ${randomColor})`;
+
+            this.x = x - this.size/2; this.y = y - this.size/2;
+            this.vx = (Math.random() - 0.5) * 25; this.vy = (Math.random() - 0.5) * 25;
             this.rotation = Math.random() * 360;
             this.isDragging = false;
             container.appendChild(this.element);
@@ -117,66 +275,37 @@
                 this.vy = e.clientY - this.lastY;
                 this.lastX = e.clientX; this.lastY = e.clientY;
             });
-            this.element.addEventListener('pointerup', () => this.isDragging = false);
+            this.element.addEventListener('pointerup', () => {
+                this.isDragging = false;
+            });
         }
         update() {
             if (!this.isDragging) {
-                this.vy += gravity; this.vx *= friction; this.vy *= friction;
+                this.vy += 0.5; this.vx *= 0.99; this.vy *= 0.99;
                 this.x += this.vx; this.y += this.vy;
                 this.rotation += this.vx * 0.5;
                 const b = window.innerHeight - this.size, r = window.innerWidth - this.size;
-                if (this.y > b) { this.y = b; this.vy *= -bounce; this.vx *= 0.9; }
-                if (this.y < 0) { this.y = 0; this.vy *= -bounce; }
-                if (this.x > r) { this.x = r; this.vx *= -bounce; }
-                if (this.x < 0) { this.x = 0; this.vx *= -bounce; }
+                if (this.y > b) { this.y = b; this.vy *= -0.7; }
+                if (this.y < 0) { this.y = 0; this.vy *= -0.7; }
+                if (this.x > r) { this.x = r; this.vx *= -0.7; }
+                if (this.x < 0) { this.x = 0; this.vx *= -0.7; }
             }
             this.element.style.transform = `translate(${this.x}px, ${this.y}px) rotate(${this.rotation}deg)`;
-        }
-    }
-
-    // Non-overlapping placement logic
-    function initClouds() {
-        const maxClouds = 12;
-        const attempts = 500;
-        const baseSize = window.innerWidth < 600 ? 150 : 300;
-
-        for (let i = 0; i < maxClouds; i++) {
-            let found = false;
-            for (let a = 0; a < attempts; a++) {
-                const size = Math.random() * 100 + baseSize;
-                const x = Math.random() * (window.innerWidth - size);
-                const y = Math.random() * (window.innerHeight * 0.7);
-                
-                // Collision check against existing clouds
-                let overlap = false;
-                for (let c of clouds) {
-                    const dx = (x + size/2) - (c.x + c.size/2);
-                    const dy = (y + size/2) - (c.y + c.size/2);
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < (size/2 + c.size/2) + 20) { // +20 for padding
-                        overlap = true;
-                        break;
-                    }
-                }
-                if (!overlap) {
-                    clouds.push(new TiaCloud(x, y, size));
-                    found = true;
-                    break;
-                }
-            }
         }
     }
 
     function spawn(x, y) { heads.push(new TiaHead(x, y)); }
 
     container.addEventListener('pointerdown', (e) => {
-        if (e.target === container || e.target === cloudLayer) spawn(e.clientX, e.clientY);
+        if (e.target === container || e.target === cloudLayer) {
+            spawn(e.clientX, e.clientY);
+            confetti({ particleCount: 10, origin: { x: e.clientX/window.innerWidth, y: e.clientY/window.innerHeight }, colors: ['#fff'] });
+        }
     });
 
     window.onload = () => {
-        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ffffff', '#FFD700', '#87CEEB'] });
         initClouds();
-        for(let i=0; i<4; i++) spawn(Math.random() * window.innerWidth, 100);
+        for(let i=0; i<3; i++) spawn(Math.random() * window.innerWidth, 100);
         function loop() {
             clouds.forEach(c => c.update());
             heads.forEach(h => h.update());
