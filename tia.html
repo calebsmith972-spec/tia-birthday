@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tia's Birthday Sky</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+            background: linear-gradient(180deg, #87CEEB 0%, #4682B4 100%);
+            font-family: 'Montserrat', sans-serif; user-select: none; touch-action: none; 
+        }
+        #game-container { position: relative; width: 100vw; height: 100vh; }
+        .tia-cloud-layer { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+        .cloud-head {
+            position: absolute; will-change: transform; opacity: 0.2;
+            filter: blur(4px); -webkit-user-drag: none;
+        }
+        .header-ui { position: absolute; top: 5vh; width: 100%; text-align: center; pointer-events: none; z-index: 100; }
+        .title {
+            font-size: clamp(1.8rem, 10vw, 5rem); color: white;
+            display: inline-flex; flex-wrap: wrap; justify-content: center;
+            gap: 2px; pointer-events: auto; text-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .title span { display: inline-block; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .title span:hover { transform: scale(1.3) translateY(-10px) rotate(5deg); color: #FFD700; }
+        .head-interact {
+            position: absolute; will-change: transform; cursor: grab;
+            filter: drop-shadow(0 8px 12px rgba(0,0,0,0.2)); z-index: 10;
+            -webkit-user-drag: none; touch-action: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div class="tia-cloud-layer" id="background-clouds"></div>
+    <div class="header-ui">
+        <h1 class="title" id="interactive-title"></h1>
+    </div>
+</div>
+
+<script>
+    const container = document.getElementById('game-container');
+    const cloudLayer = document.getElementById('background-clouds');
+    const titleEl = document.getElementById('interactive-title');
+    const heads = []; 
+    const clouds = []; 
+    
+    const gravity = 0.6;
+    const friction = 0.98; 
+    const bounce = 0.7;
+
+    // Title generation
+    const text = "Happy Birthday, Tia!";
+    text.split('').forEach(char => {
+        const span = document.createElement('span');
+        span.innerHTML = char === ' ' ? '&nbsp;' : char;
+        titleEl.appendChild(span);
+    });
+
+    class TiaCloud {
+        constructor(x, y, size) {
+            this.element = document.createElement('img');
+            this.element.src = 'head.png'; 
+            this.element.className = 'cloud-head';
+            this.x = x;
+            this.y = y;
+            this.size = size;
+            this.speed = 0.1 + Math.random() * 0.3;
+            this.element.style.width = this.size + 'px';
+            cloudLayer.appendChild(this.element);
+        }
+        update() {
+            this.x += this.speed;
+            if (this.x > window.innerWidth) this.x = -this.size;
+            this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
+        }
+    }
+
+    // Interactive Head Logic
+    class TiaHead {
+        constructor(x, y) {
+            this.element = document.createElement('img');
+            this.element.src = 'head.png'; 
+            this.element.className = 'head-interact';
+            const baseSize = window.innerWidth < 600 ? 80 : 120;
+            this.size = Math.random() * 40 + baseSize; 
+            this.element.style.width = this.size + 'px';
+            this.x = x - this.size/2;
+            this.y = y - this.size/2;
+            this.vx = (Math.random() - 0.5) * 20;
+            this.vy = (Math.random() - 0.5) * 20;
+            this.rotation = Math.random() * 360;
+            this.isDragging = false;
+            container.appendChild(this.element);
+            this.setupEvents();
+        }
+        setupEvents() {
+            this.element.addEventListener('pointerdown', (e) => {
+                this.isDragging = true;
+                this.element.setPointerCapture(e.pointerId);
+                this.vx = 0; this.vy = 0;
+                this.lastX = e.clientX; this.lastY = e.clientY;
+                e.stopPropagation(); 
+            });
+            this.element.addEventListener('pointermove', (e) => {
+                if (!this.isDragging) return;
+                this.x = e.clientX - this.size / 2;
+                this.y = e.clientY - this.size / 2;
+                this.vx = e.clientX - this.lastX;
+                this.vy = e.clientY - this.lastY;
+                this.lastX = e.clientX; this.lastY = e.clientY;
+            });
+            this.element.addEventListener('pointerup', () => this.isDragging = false);
+        }
+        update() {
+            if (!this.isDragging) {
+                this.vy += gravity; this.vx *= friction; this.vy *= friction;
+                this.x += this.vx; this.y += this.vy;
+                this.rotation += this.vx * 0.5;
+                const b = window.innerHeight - this.size, r = window.innerWidth - this.size;
+                if (this.y > b) { this.y = b; this.vy *= -bounce; this.vx *= 0.9; }
+                if (this.y < 0) { this.y = 0; this.vy *= -bounce; }
+                if (this.x > r) { this.x = r; this.vx *= -bounce; }
+                if (this.x < 0) { this.x = 0; this.vx *= -bounce; }
+            }
+            this.element.style.transform = `translate(${this.x}px, ${this.y}px) rotate(${this.rotation}deg)`;
+        }
+    }
+
+    // Non-overlapping placement logic
+    function initClouds() {
+        const maxClouds = 12;
+        const attempts = 500;
+        const baseSize = window.innerWidth < 600 ? 150 : 300;
+
+        for (let i = 0; i < maxClouds; i++) {
+            let found = false;
+            for (let a = 0; a < attempts; a++) {
+                const size = Math.random() * 100 + baseSize;
+                const x = Math.random() * (window.innerWidth - size);
+                const y = Math.random() * (window.innerHeight * 0.7);
+                
+                // Collision check against existing clouds
+                let overlap = false;
+                for (let c of clouds) {
+                    const dx = (x + size/2) - (c.x + c.size/2);
+                    const dy = (y + size/2) - (c.y + c.size/2);
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < (size/2 + c.size/2) + 20) { // +20 for padding
+                        overlap = true;
+                        break;
+                    }
+                }
+                if (!overlap) {
+                    clouds.push(new TiaCloud(x, y, size));
+                    found = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    function spawn(x, y) { heads.push(new TiaHead(x, y)); }
+
+    container.addEventListener('pointerdown', (e) => {
+        if (e.target === container || e.target === cloudLayer) spawn(e.clientX, e.clientY);
+    });
+
+    window.onload = () => {
+        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ffffff', '#FFD700', '#87CEEB'] });
+        initClouds();
+        for(let i=0; i<4; i++) spawn(Math.random() * window.innerWidth, 100);
+        function loop() {
+            clouds.forEach(c => c.update());
+            heads.forEach(h => h.update());
+            requestAnimationFrame(loop);
+        }
+        loop();
+    };
+</script>
+</body>
+</html>
